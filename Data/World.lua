@@ -1,4 +1,4 @@
--- Professional built-in data. Generated file, do not edit by hand.
+-- Craftmaster built-in data. Generated file, do not edit by hand.
 -- Sources: MissingTradeSkillsList, TradeskillInfo, Skillet-Classic, pfQuest (see README).
 local N = CM_DATA.npcs
 N[66]="Tharynn Bouden|12|41.8|67.2|A|10"

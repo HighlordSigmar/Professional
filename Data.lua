@@ -376,6 +376,9 @@ function CM:SourceLines(rec)
 
   local r = rec.db
   if r then
+    if r.tw then
+      add("|cff33ccffTurtle WoW / OctoWoW recipe.|r Where to learn it isn't in the built-in data; Professional records the trainer, vendor or drop once you meet it.")
+    end
     if r.au then add("|cffffd100Learned automatically|r with the profession") end
     if r.tr then
       add("|cffffd100Trainer|r" .. (r.tp and ("  " .. CM.Money(r.tp)) or ""))
@@ -499,6 +502,7 @@ function CM:SourceTags(rec)
   local function tag(t) if not seen[t] then seen[t] = true; table.insert(tags, t) end end
   local r = rec.db
   if r then
+    if r.tw then tag("C") end
     if r.au then tag("A") end
     if r.tr or r.ct then tag("T") end
     if r.qu then tag("Q") end

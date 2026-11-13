@@ -1,4 +1,4 @@
--- Professional built-in data. Generated file, do not edit by hand.
+-- Craftmaster built-in data. Generated file, do not edit by hand.
 -- Sources: MissingTradeSkillsList, TradeskillInfo, Skillet-Classic, pfQuest (see README).
 local T = CM_DATA.recipeItems
 T[728]={n="Recipe: Westfall Stew",p="Cooking",qa=1,vp=200,v={[340]=0},qu={38}}

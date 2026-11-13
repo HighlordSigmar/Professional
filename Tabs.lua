@@ -397,12 +397,12 @@ function M:Init()
   end, "Also list recipes that only the other faction can get, and their trainers and vendors.")
   self.factionCheck:SetPoint("LEFT", self.nowCheck.label, "RIGHT", 6, -1)
   self.typeButton = CM:MakeButton("ProfessionalSourceFilter", f, "Source: All", 120, 20, function()
-    local order = { "all", "T", "V", "D", "Q", "R" }
+    local order = { "all", "T", "V", "D", "Q", "R", "C" }
     local cur = M.source or "all"
     local nxt = "all"
     for i = 1, table.getn(order) do if order[i] == cur then nxt = order[i + 1] or "all" end end
     M.source = nxt
-    local labels = { all = "Source: All", T = "Source: Trainer", V = "Source: Vendor", D = "Source: Drop", Q = "Source: Quest", R = "Source: Reputation" }
+    local labels = { all = "Source: All", T = "Source: Trainer", V = "Source: Vendor", D = "Source: Drop", Q = "Source: Quest", R = "Source: Reputation", C = "Source: Custom" }
     this:SetText(labels[nxt])
     CM:Refresh(true)
   end)
@@ -413,7 +413,7 @@ function M:Init()
   self.summary:SetPoint("LEFT", b, "LEFT", 6, 0)
   self.legend = b:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.legend:SetPoint("LEFT", self.summary, "RIGHT", 16, 0)
-  self.legend:SetText("|cff40ff40learnable now|r  |cffffff00within 25 points|r  |cffff8040later|r  |cffff4040blocked|r   A auto  T trainer  V vendor  D drop  Q quest  R rep")
+  self.legend:SetText("|cff40ff40learnable now|r  |cffffff00within 25 points|r  |cffff8040later|r  |cffff4040blocked|r   A auto  T trainer  V vendor  D drop  Q quest  R rep  C custom")
 end
 
 function M:Build()

@@ -1,4 +1,4 @@
--- Professional built-in data. Generated file, do not edit by hand.
+-- Craftmaster built-in data. Generated file, do not edit by hand.
 -- Sources: MissingTradeSkillsList, TradeskillInfo, Skillet-Classic, pfQuest (see README).
 CM_DATA.recipes["First Aid"] = {
   {n="Linen Bandage",s=3275,l=1,y=30,g=45,r=60,i=1251,rg={2589,1},au=1},
@@ -11,7 +11,9 @@ CM_DATA.recipes["First Aid"] = {
   {n="Heavy Silk Bandage",s=7929,l=180,y=180,g=210,r=240,i=6451,rg={4306,2},ri={16112}},
   {n="Mageweave Bandage",s=10840,l=210,y=210,g=240,r=270,i=8544,rg={4338,1},ri={16113}},
   {n="Heavy Mageweave Bandage",s=10841,l=240,y=240,g=270,r=300,i=8545,rg={4338,2},tp=0,tr={12920,12939}},
+  {n="Powerful Smelling Salts",s=10844,l=250,y=290,g=320,r=350,i=8546,rg={8150,4},tw=1},
   {n="Runecloth Bandage",s=18629,l=260,y=260,g=290,r=320,i=14529,rg={14047,1},tp=0,tr={12920,12939}},
   {n="Heavy Runecloth Bandage",s=18630,l=290,y=290,g=320,r=350,i=14530,rg={14047,2},tp=0,tr={12920,12939}},
+  {n="Magic Infused Bandage",s=30021,l=300,y=300,g=330,r=360,i=23684,rg={14047,3,16204,1},tw=1},
   {n="Powerful Anti-Venom",s=23787,l=300,y=300,g=330,r=360,i=19440,rg={19441,1},ri={19442}},
 }

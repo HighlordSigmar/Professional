@@ -67,4 +67,4 @@ Log in on each character and open each profession once so Professional can read 
 
 ## Credits
 
-The built-in data was compiled from these projects: MissingTradeSkillsList (recipe sources, trainers, learn levels), TradeskillInfo (reagents, skill-up levels), Skillet-Classic (skill-up levels for recipes TradeskillInfo lacks) and pfQuest (NPC locations, vendor stock, drop chances and names; MIT licence). Survival and Jewelcrafting come from Atlas-CFM (recipes, skill-up levels, reagents, trainers) and pfQuest-turtle (item and NPC names, locations).
+The built-in data was compiled from these projects: MissingTradeSkillsList (recipe sources, trainers, learn levels), Atlas-CFM (vanilla and Turtle WoW reagents, skill-up levels and custom recipes), TradeskillInfo (yields, fallback reagents), Skillet-Classic (skill-up levels for recipes TradeskillInfo lacks) and pfQuest (NPC locations, vendor stock, drop chances and names; MIT licence). Survival and Jewelcrafting come from Atlas-CFM (recipes, skill-up levels, reagents, trainers) and pfQuest-turtle (item and NPC names, locations).
