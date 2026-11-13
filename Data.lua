@@ -185,6 +185,7 @@ function CM:Recipe(prof, name)
     rec.learn, rec.y, rec.g, rec.gr = db.l, db.y, db.g, db.r
     rec.item = db.i
     rec.reagents = db.rg
+    rec.tools = db.tl
   end
   if learned and not rec.learn then rec.learn = learned.l end
   if cache then
@@ -230,15 +231,19 @@ end
 ------------------------------------------------------------------------
 -- Characters and recipes
 ------------------------------------------------------------------------
-function CM:CharKnows(char, prof, key)
+-- Known by name, or by the item it makes (covers small name differences on custom servers)
+function CM:CharKnows(char, prof, key, item)
   local p = char and char.profs and char.profs[prof]
-  return p and p.known and p.known[key] and true or false
+  if not p or not p.known then return false end
+  if p.known[key] then return true end
+  if item and p.items and p.items[item] then return true end
+  return false
 end
 
-function CM:KnownBy(prof, key, exceptSelf)
+function CM:KnownBy(prof, key, exceptSelf, item)
   local out = {}
   for _, c in ipairs(self:Chars(true)) do
-    if not (exceptSelf and c.name == self.player) and self:CharKnows(c.data, prof, key) then
+    if not (exceptSelf and c.name == self.player) and self:CharKnows(c.data, prof, key, item) then
       table.insert(out, c.name)
     end
   end
@@ -289,7 +294,7 @@ function CM:RecipeFactionOK(rec)
       if self:FactionOK(s.f) then ok = true end
     end
   end
-  if table.getn(self:KnownBy(rec.prof, rec.key, true)) > 0 then return true end
+  if table.getn(self:KnownBy(rec.prof, rec.key, true, rec.item)) > 0 then return true end
   return ok or not any
 end
 
@@ -312,7 +317,7 @@ end
 
 -- "known", "now", "soon", "later", "blocked"
 function CM:LearnState(rec, char, skill)
-  if self:CharKnows(char, rec.prof, rec.key) then return "known" end
+  if self:CharKnows(char, rec.prof, rec.key, rec.item) then return "known" end
   if self:Blockers(rec, char) then return "blocked" end
   local learn = rec.learn or 0
   if skill and learn <= skill then return "now" end
@@ -373,7 +378,7 @@ function CM:SourceLines(rec)
   if r then
     if r.au then add("|cffffd100Learned automatically|r with the profession") end
     if r.tr then
-      add("|cffffd100Trainer|r  " .. CM.Money(r.tp))
+      add("|cffffd100Trainer|r" .. (r.tp and ("  " .. CM.Money(r.tp)) or ""))
       npcList(r.tr, "")
     elseif r.ct then
       add("|cffffd100Class trainer|r (" .. (CLASS_NAMES[r.ct] or r.ct) .. ")  " .. CM.Money(r.tp))
@@ -476,7 +481,7 @@ function CM:SourceLines(rec)
     end
   end
 
-  local alts = self:KnownBy(rec.prof, rec.key, true)
+  local alts = self:KnownBy(rec.prof, rec.key, true, rec.item)
   if table.getn(alts) > 0 then
     add("|cff33ccffKnown by:|r " .. table.concat(alts, ", "))
   end
@@ -610,7 +615,7 @@ function CM:Plan(prof, char, from, to, opts)
   local candidates = {}
   for _, rec in ipairs(self:ProfessionRecipes(prof)) do
     if rec.y and rec.learn and not self:HasCooldown(rec) then
-      local known = self:CharKnows(char, prof, rec.key)
+      local known = self:CharKnows(char, prof, rec.key, rec.item)
       if known or (not self:Blockers(rec, char) and self:RecipeFactionOK(rec) and self:PlanSourceOK(rec, opts)) then
         rec.known = known
         rec.weight = reagentWeight(rec)
@@ -639,7 +644,11 @@ function CM:Plan(prof, char, from, to, opts)
   for s = from, to - 1 do
     if caps[s] then
       local nr = caps[s]
-      table.insert(steps, { note = "Train " .. nr.n .. " (skill " .. nr.mn .. ", level " .. nr.lv .. ", " .. CM.Money(nr.tp) .. ")" })
+      local bits = {}
+      if nr.mn and nr.mn > 0 then table.insert(bits, "skill " .. nr.mn) end
+      if nr.lv and nr.lv > 0 then table.insert(bits, "level " .. nr.lv) end
+      if nr.tp and nr.tp > 0 then table.insert(bits, CM.Money(nr.tp)) end
+      table.insert(steps, { note = "Train " .. nr.n .. (table.getn(bits) > 0 and (" (" .. table.concat(bits, ", ") .. ")") or "") })
       cost = cost + (nr.tp or 0)
       last = nil
     end
@@ -752,28 +761,58 @@ function CM:MakersOf(id)
   return self.makers[id]
 end
 
--- Which professions use an item as a reagent (built-in data + cache)
-function CM:ReagentUses(id)
+-- Every recipe that uses an item, by profession: [prof][key] = { name, count }
+-- Built from the built-in data, with recipes seen in a profession window taking priority.
+function CM:ReagentRecipes(id)
   if not self.reagentIndex then
     local idx = {}
-    local function addUse(item, prof)
-      if not idx[item] then idx[item] = {} end
-      idx[item][prof] = (idx[item][prof] or 0) + 1
+    local function add(prof, key, name, rg)
+      if not rg then return end
+      for j = 1, table.getn(rg), 2 do
+        local item = rg[j]
+        if not idx[item] then idx[item] = {} end
+        if not idx[item][prof] then idx[item][prof] = {} end
+        idx[item][prof][key] = { name = name, count = rg[j + 1] or 1 }
+      end
     end
     for prof, list in pairs(CM_DATA.recipes) do
+      local cache = self.db.cache[prof]
       for i = 1, table.getn(list) do
-        local rg = list[i].rg
-        if rg then for j = 1, table.getn(rg), 2 do addUse(rg[j], prof) end end
+        local key = CM.Key(list[i].n)
+        if not (cache and cache[key] and cache[key].rg and table.getn(cache[key].rg) > 0) then
+          add(prof, key, list[i].n, list[i].rg)
+        end
       end
     end
     for prof, list in pairs(self.db.cache) do
-      if not CM_DATA.recipes[prof] then
-        for _, c in pairs(list) do
-          if c.rg then for j = 1, table.getn(c.rg), 2 do addUse(c.rg[j], prof) end end
-        end
+      for key, c in pairs(list) do
+        if c.rg and table.getn(c.rg) > 0 then add(prof, key, c.n, c.rg) end
       end
     end
     self.reagentIndex = idx
   end
   return self.reagentIndex[id]
+end
+
+-- Which professions use an item as a reagent: [prof] = number of recipes
+function CM:ReagentUses(id)
+  local r = self:ReagentRecipes(id)
+  if not r then return nil end
+  local out = {}
+  for prof, list in pairs(r) do out[prof] = CM.Count(list) end
+  return out
+end
+
+function CM:CharHasProfession(char, prof)
+  if char.skills and char.skills[prof] then return true end
+  if char.profs and char.profs[prof] then return true end
+  return false
+end
+
+-- Should recipes of this profession be listed in item tooltips?
+-- Unset means "only if this character has the profession".
+function CM:TooltipProfEnabled(prof)
+  local v = self.settings.tooltipProfs and self.settings.tooltipProfs[prof]
+  if v ~= nil then return v end
+  return self:CharHasProfession(self.char, prof)
 end

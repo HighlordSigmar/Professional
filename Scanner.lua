@@ -87,7 +87,7 @@ function CM:ScanLive(mode)
   local p = self.char.profs[prof]
   if not p then p = {}; self.char.profs[prof] = p end
   p.rank, p.max, p.mode, p.t = rank, max, mode, time()
-  p.known, p.list = {}, {}
+  p.known, p.list, p.items = {}, {}, {}
   self.db.cache[prof] = self.db.cache[prof] or {}
   local cache = self.db.cache[prof]
   self.detailed[prof] = self.detailed[prof] or {}
@@ -113,6 +113,7 @@ function CM:ScanLive(mode)
           detailed[key] = true
           self:CacheRecipe(api, prof, i, name, header)
         end
+        if cache[key] and cache[key].i then p.items[cache[key].i] = 1 end
       end
     end
   end

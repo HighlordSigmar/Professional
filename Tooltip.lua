@@ -1,6 +1,7 @@
 -- Professional: extra lines on item tooltips
 --  * recipe items: which of your characters know it or can learn it
---  * reagents: which professions use it, what the queue needs, how many your alts hold
+--  * reagents: the recipes that use it (for the professions ticked in Options),
+--    what the queue needs, how many your alts hold
 
 local CM = Professional
 
@@ -49,12 +50,61 @@ function CM:AddTooltipInfo(tip, id)
     end
   end
 
-  local uses = self:ReagentUses(id)
+  local uses = self:ReagentRecipes(id)
   if uses then
-    local list = {}
-    for p in pairs(uses) do table.insert(list, p) end
-    table.sort(list)
-    line("Reagent: " .. table.concat(list, ", "), nil, 1, 0.82, 0)
+    local profs = {}
+    for p in pairs(uses) do table.insert(profs, p) end
+    table.sort(profs)
+    local hidden = {}
+    local max = self.settings.tooltipMax or 10
+    for _, p in ipairs(profs) do
+      if self:TooltipProfEnabled(p) then
+        local rank = self:CharSkill(self.char, p)
+        local list = {}
+        for key, u in pairs(uses[p]) do
+          local rec = self:Recipe(p, u.name)
+          local known = self:CharKnows(self.char, p, key, rec.item)
+          if known or not self.settings.tooltipKnownOnly then
+            table.insert(list, { rec = rec, known = known, count = u.count })
+          end
+        end
+        table.sort(list, function(a, b)
+          if a.known ~= b.known then return a.known end
+          local la, lb = a.rec.learn or 0, b.rec.learn or 0
+          if la ~= lb then return la < lb end
+          return a.rec.name < b.rec.name
+        end)
+        local n = table.getn(list)
+        if n > 0 then
+          line(p .. " |cff999999(" .. n .. ")|r", nil, 1, 0.82, 0)
+          for i = 1, math.min(n, max) do
+            local e = list[i]
+            local c
+            if e.known then
+              c = CM.DIFF_COLOR[(rank and self:Difficulty(e.rec, rank)) or "unknown"] or CM.DIFF_COLOR.unknown
+              if not e.rec.y then c = { r = 1, g = 1, b = 1 } end
+            else
+              c = { r = 0.5, g = 0.5, b = 0.5 }
+            end
+            local right = "x" .. e.count
+            if e.known then
+              local can = self.Tabs.recipes:Craftable(e.rec, self.char)
+              if can > 0 then right = "|cff40ff40[" .. can .. "]|r " .. right end
+            else
+              right = right .. " |cff808080learn " .. (e.rec.learn or "?") .. "|r"
+            end
+            tip:AddDoubleLine("  " .. e.rec.name, right, c.r, c.g, c.b, 1, 1, 1)
+            added = true
+          end
+          if n > max then line("  ...and " .. (n - max) .. " more", nil, 0.5, 0.5, 0.5) end
+        end
+      else
+        table.insert(hidden, p)
+      end
+    end
+    if self.settings.tooltipOthers and table.getn(hidden) > 0 then
+      line("Also used in: " .. table.concat(hidden, ", "), nil, 0.5, 0.5, 0.5)
+    end
     if self.char and self.Tabs and self.Tabs.shopping then
       local need = self.Tabs.shopping:Needs()[id]
       if need then

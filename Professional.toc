@@ -20,6 +20,9 @@ Data\Recipes_Tailoring.lua
 Data\RecipeItems.lua
 Data\World.lua
 Data\Items.lua
+Data\Turtle.lua
+Data\Recipes_Survival.lua
+Data\Recipes_Jewelcrafting.lua
 Data.lua
 Scanner.lua
 Widgets.lua

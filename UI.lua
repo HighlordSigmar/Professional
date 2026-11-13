@@ -12,7 +12,7 @@ CM.DETAIL_WIDTH = 360
 
 CM.view = {}
 CM.collapsed = {}
-CM.tabOrder = { "recipes", "missing", "skillup", "shopping", "alts" }
+CM.tabOrder = { "recipes", "missing", "skillup", "shopping", "alts", "options" }
 CM.Tabs = CM.Tabs or {}
 
 local BACKDROP = {
@@ -178,7 +178,7 @@ function CM:CreateUI()
 
   -- tabs
   self.tabButtons = {}
-  local labels = { recipes = "Recipes", missing = "Missing", skillup = "Skill-up", shopping = "Queue & Shopping", alts = "Alts" }
+  local labels = { recipes = "Recipes", missing = "Missing", skillup = "Skill-up", shopping = "Queue & Shopping", alts = "Alts", options = "Options" }
   local x = 16
   for i = 1, table.getn(self.tabOrder) do
     local key = self.tabOrder[i]
@@ -493,6 +493,8 @@ function CM:RecipeDetail(rec, ctx)
     add("|cffffd100Requires:|r " .. table.concat(tools, ", "))
   elseif rec.cache and rec.cache.tl then
     add("|cffffd100Requires:|r " .. rec.cache.tl)
+  elseif rec.tools then
+    add("|cffffd100Requires:|r " .. rec.tools)
   end
   if api then
     local cd = api.cooldown(ctx.index)
@@ -618,7 +620,7 @@ function CM:LiveOpened(mode)
     self:CreateUI()
     self.view.char = self.player
     self.view.prof = snap.prof
-    if self.currentTab == "alts" then self.currentTab = "recipes" end
+    if self.currentTab == "alts" or self.currentTab == "options" then self.currentTab = "recipes" end
     if self.frame:IsVisible() then self:Refresh(true) else self:Show() end
   else
     self:RefreshSoon()

@@ -16,6 +16,8 @@ CM.PROF_ICONS = {
   ["First Aid"] = "Interface\\Icons\\Spell_Holy_SealOfSacrifice",
   ["Mining"] = "Interface\\Icons\\Trade_Mining",
   ["Poisons"] = "Interface\\Icons\\Trade_BrewPoison",
+  ["Survival"] = "Interface\\Icons\\Trade_Survival",
+  ["Jewelcrafting"] = "Interface\\Icons\\INV_Misc_Gem_01",
   ["Herbalism"] = "Interface\\Icons\\Trade_Herbalism",
   ["Skinning"] = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01",
   ["Fishing"] = "Interface\\Icons\\Trade_Fishing",
@@ -175,6 +177,9 @@ local DEFAULTS = {
   planDrops = false,
   showOtherFaction = false,
   lastTab = "recipes",
+  tooltipKnownOnly = false,
+  tooltipOthers = false,
+  tooltipMax = 10,
 }
 
 function CM:InitDB()
@@ -185,6 +190,7 @@ function CM:InitDB()
   for k, v in pairs(DEFAULTS) do
     if db.settings[k] == nil then db.settings[k] = v end
   end
+  db.settings.tooltipProfs = db.settings.tooltipProfs or {}
   db.realms = db.realms or {}
   db.cache = db.cache or {}         -- [prof][key] = recipe details seen in a profession window
   db.learned = db.learned or {}     -- [prof][key] = recipes/sources recorded at trainers, vendors, loot
@@ -304,6 +310,11 @@ SlashCmdList["PROFESSIONAL"] = function(msg)
       ProfessionalFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 40)
     end
     CM:Print("window position reset.")
+  elseif cmd == "options" or cmd == "config" or cmd == "settings" then
+    if not CM.ready then return end
+    CM:CreateUI()
+    CM.currentTab = "options"
+    CM:Show()
   elseif cmd == "tooltip" then
     CM.settings.tooltip = not CM.settings.tooltip
     CM:Print("tooltip info " .. (CM.settings.tooltip and "on" or "off"))
@@ -331,6 +342,7 @@ SlashCmdList["PROFESSIONAL"] = function(msg)
     CM:Print("/prof - open or close the window")
     CM:Print("/prof blizzard - switch between Professional and the default profession windows")
     CM:Print("/prof scale <0.5-2>, /prof reset - window size and position")
+    CM:Print("/prof options - choose which professions show recipes in tooltips")
     CM:Print("/prof tooltip - recipe info in item tooltips on/off")
     CM:Print("/prof alts - alt item counts in tooltips on/off")
     CM:Print("/prof delete <name> - forget a character")

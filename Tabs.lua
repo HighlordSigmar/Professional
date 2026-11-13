@@ -430,7 +430,7 @@ function M:Build()
   local total, now = 0, 0
   local rows = {}
   for _, rec in ipairs(CM:ProfessionRecipes(prof)) do
-    if not CM:CharKnows(char, prof, rec.key) and CM:RecipeFactionOK(rec) then
+    if not CM:CharKnows(char, prof, rec.key, rec.item) and CM:RecipeFactionOK(rec) then
       local state = CM:LearnState(rec, char, skill)
       local tags = CM:SourceTags(rec)
       total = total + 1
@@ -994,7 +994,7 @@ function A:Build()
     for _, prof in ipairs(CM:AllProfessions()) do
       for _, rec in ipairs(CM:ProfessionRecipes(prof)) do
         if matches(rec.name, self.search) then
-          table.insert(results, { id = "w:" .. prof .. ":" .. rec.key, kind = "who", rec = rec, knownBy = CM:KnownBy(prof, rec.key) })
+          table.insert(results, { id = "w:" .. prof .. ":" .. rec.key, kind = "who", rec = rec, knownBy = CM:KnownBy(prof, rec.key, false, rec.item) })
         end
       end
     end
@@ -1082,7 +1082,7 @@ function A:Detail(d)
     if CM:IsCraftProfession(d.prof) then
       local missing, now = 0, 0
       for _, rec in ipairs(CM:ProfessionRecipes(d.prof)) do
-        if not CM:CharKnows(c, d.prof, rec.key) and CM:RecipeFactionOK(rec) then
+        if not CM:CharKnows(c, d.prof, rec.key, rec.item) and CM:RecipeFactionOK(rec) then
           missing = missing + 1
           if CM:LearnState(rec, c, d.rank or 0) == "now" then now = now + 1 end
         end
@@ -1129,4 +1129,134 @@ function A:UpdateBottom()
   if isProf then self.viewBtn:Enable(); self.missing:Enable() else self.viewBtn:Disable(); self.missing:Disable() end
   local name = d and (d.char or d.name)
   if name and name ~= CM.player and (d.kind == "char" or d.kind == "prof") then self.delete:Enable() else self.delete:Disable() end
+end
+
+------------------------------------------------------------------------
+-- OPTIONS
+------------------------------------------------------------------------
+local O = {}
+CM.Tabs.options = O
+
+local OPTION_INFO = {
+  tooltip = { "Show Professional info in tooltips", "Master switch for everything Professional adds to item tooltips." },
+  tooltipKnownOnly = { "Only list recipes this character knows", "When on, reagent tooltips only list recipes you can already craft. When off, recipes you haven't learned are listed too, in grey with the skill they're learned at." },
+  tooltipOthers = { "Name the hidden professions in one line", "Adds a single grey \"Also used in: ...\" line for professions you've hidden, instead of nothing." },
+  tooltipAlts = { "Show how many of a reagent each alt has", "Lists your other characters that hold the item, with bank counts." },
+  replaceWindow = { "Replace the default profession windows", "When off, the normal Blizzard windows open and Professional only opens with /prof." },
+}
+local MAX_STEPS = { 5, 10, 20, 50 }
+
+function O:Init()
+  local f = self.filter
+  local t = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  t:SetPoint("LEFT", f, "LEFT", 10, 0)
+  t:SetText("Click a line to change it.")
+  local b = self.bottom
+  self.reset = CM:MakeButton("ProfessionalOptionsReset", b, "Reset to my professions", 170, 22, function()
+    CM.settings.tooltipProfs = {}
+    CM:Refresh()
+  end)
+  self.reset:SetPoint("LEFT", b, "LEFT", 4, 0)
+  self.allOn = CM:MakeButton("ProfessionalOptionsAll", b, "Show all", 90, 22, function()
+    for _, p in ipairs(CM:AllProfessions()) do CM.settings.tooltipProfs[p] = true end
+    CM:Refresh()
+  end)
+  self.allOn:SetPoint("LEFT", self.reset, "RIGHT", 4, 0)
+  self.allOff = CM:MakeButton("ProfessionalOptionsNone", b, "Hide all", 90, 22, function()
+    for _, p in ipairs(CM:AllProfessions()) do CM.settings.tooltipProfs[p] = false end
+    CM:Refresh()
+  end)
+  self.allOff:SetPoint("LEFT", self.allOn, "RIGHT", 4, 0)
+end
+
+function O:Build()
+  local out = {}
+  table.insert(out, headerRow("Reagent tooltips: list recipes from these professions", "sec:profs"))
+  for _, p in ipairs(CM:AllProfessions()) do
+    if CM:IsCraftProfession(p) then
+      table.insert(out, { id = "p:" .. p, kind = "prof", prof = p })
+    end
+  end
+  table.insert(out, headerRow("Tooltip options", "sec:tip"))
+  for _, k in ipairs({ "tooltip", "tooltipKnownOnly", "tooltipOthers", "tooltipAlts" }) do
+    table.insert(out, { id = "o:" .. k, kind = "opt", key = k })
+  end
+  table.insert(out, { id = "o:max", kind = "max" })
+  table.insert(out, headerRow("Window", "sec:win"))
+  table.insert(out, { id = "o:replaceWindow", kind = "opt", key = "replaceWindow" })
+  CM.status:SetText("")
+  return out
+end
+
+local function onOff(v)
+  return v and "|cff40ff40On|r" or "|cff808080Off|r"
+end
+
+function O:Render(row, d)
+  if renderCommon(row, d) then return end
+  if d.kind == "prof" then
+    row.icon:SetTexture(CM:ProfIcon(d.prof))
+    local on = CM:TooltipProfEnabled(d.prof)
+    row.text:SetText(d.prof)
+    if on then row.text:SetTextColor(1, 1, 1) else row.text:SetTextColor(0.5, 0.5, 0.5) end
+    local auto = CM.settings.tooltipProfs[d.prof] == nil
+    row.right:SetText((on and "|cff40ff40Shown|r" or "|cff808080Hidden|r") .. (auto and " |cff666666(auto)|r" or ""))
+  elseif d.kind == "opt" then
+    row.text:SetText(OPTION_INFO[d.key][1])
+    row.text:SetTextColor(1, 1, 1)
+    row.right:SetText(onOff(CM.settings[d.key]))
+  elseif d.kind == "max" then
+    row.text:SetText("Recipes listed per profession")
+    row.text:SetTextColor(1, 1, 1)
+    row.right:SetText("|cffffffff" .. (CM.settings.tooltipMax or 10) .. "|r")
+  end
+end
+
+function O:Click(d)
+  if d.kind == "prof" then
+    CM.settings.tooltipProfs[d.prof] = not CM:TooltipProfEnabled(d.prof)
+  elseif d.kind == "opt" then
+    CM.settings[d.key] = not CM.settings[d.key]
+    if d.key == "replaceWindow" then CM:ApplyWindowReplacement() end
+  elseif d.kind == "max" then
+    local cur = CM.settings.tooltipMax or 10
+    local nxt = MAX_STEPS[1]
+    for i = 1, table.getn(MAX_STEPS) do
+      if MAX_STEPS[i] == cur then nxt = MAX_STEPS[i + 1] or MAX_STEPS[1] end
+    end
+    CM.settings.tooltipMax = nxt
+  else
+    return
+  end
+  CM:Select(d)
+  CM.list:Update()
+end
+
+function O:Detail(d)
+  local lines = {}
+  local function add(t) table.insert(lines, { text = t }) end
+  local title = "Options"
+  if d and d.kind == "prof" then
+    title = d.prof
+    local on = CM:TooltipProfEnabled(d.prof)
+    add(on and "|cff40ff40Shown in reagent tooltips.|r" or "|cff808080Hidden from reagent tooltips.|r")
+    if CM.settings.tooltipProfs[d.prof] == nil then
+      add("Not set yet, so it follows whether this character has " .. d.prof .. ".")
+    end
+    add(" ")
+    add("When you hover a reagent, the tooltip lists the " .. d.prof .. " recipes that use it: recipes you know first, coloured by difficulty, with how many you can make from your bags in green brackets and how many of the reagent each one needs.")
+  elseif d and (d.kind == "opt") then
+    title = OPTION_INFO[d.key][1]
+    add(OPTION_INFO[d.key][2])
+  elseif d and d.kind == "max" then
+    title = "Recipes per profession"
+    add("How many recipes each profession lists in a tooltip before it says \"...and N more\". Click to cycle 5, 10, 20, 50.")
+  else
+    add("Choose which professions list their recipes in reagent tooltips.")
+    add(" ")
+    add("Professions you haven't set follow this character: a blacksmith sees Blacksmithing recipes by default, and nothing from professions they don't have.")
+    add(" ")
+    add("These settings are shared by all your characters, except that \"(auto)\" professions follow whichever character you're on.")
+  end
+  CM:SetDetail({ icon = "Interface\\Icons\\INV_Misc_Gear_01", title = title, lines = lines })
 end

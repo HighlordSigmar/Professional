@@ -34,7 +34,13 @@ A profession window replacement for the 1.12 client (made for OctoWoW). It repla
 
 **Tooltips**
 - Recipe items show which of your characters already know them, can learn them now, or need more skill
-- Reagents show which professions use them, what your queue needs, and how many each alt holds
+- Reagents list the recipes that use them, grouped by profession: recipes you know first (coloured by difficulty, with how many you can make from your bags), then ones you haven't learned and the skill they're learned at
+- You choose which professions are listed on the Options tab (`/prof options`). By default each character only sees its own professions, so a blacksmith hovering Tigerseye sees Blacksmithing recipes and not Jewelcrafting ones
+- Reagent tooltips also show what your craft queue needs and how many each alt holds
+
+**Options**
+- Tick the professions whose recipes appear in reagent tooltips, or reset to "my professions"
+- Only list recipes you know, name the hidden professions in one line, recipes per profession (5 to 50), alt counts, and the window replacement switch
 
 ## Recipe data
 
@@ -47,6 +53,7 @@ It also learns as you play. It records recipes and sources it doesn't know when 
 - `/prof` or `/professional`: open or close the window
 - `/prof blizzard`: switch between Professional and the default profession windows
 - `/prof scale 0.9`, `/prof reset`: window size and position
+- `/prof options`: open the Options tab
 - `/prof tooltip`: recipe info in tooltips on/off
 - `/prof alts`: alt item counts in tooltips on/off
 - `/prof delete Name`: forget a character
@@ -60,4 +67,4 @@ Log in on each character and open each profession once so Professional can read 
 
 ## Credits
 
-The built-in data was compiled from these projects: MissingTradeSkillsList (recipe sources, trainers, learn levels), TradeskillInfo (reagents, skill-up levels), Skillet-Classic (skill-up levels for recipes TradeskillInfo lacks) and pfQuest (NPC locations, vendor stock, drop chances and names; MIT licence).
+The built-in data was compiled from these projects: MissingTradeSkillsList (recipe sources, trainers, learn levels), TradeskillInfo (reagents, skill-up levels), Skillet-Classic (skill-up levels for recipes TradeskillInfo lacks) and pfQuest (NPC locations, vendor stock, drop chances and names; MIT licence). Survival and Jewelcrafting come from Atlas-CFM (recipes, skill-up levels, reagents, trainers) and pfQuest-turtle (item and NPC names, locations).
