@@ -1,0 +1,28 @@
+## Interface: 11200
+## Title: Professional
+## Notes: Profession window replacement: missing recipes with sources, skill-up planner, craft queue, shopping list and alts.
+## Author: HighlordSigmar
+## Version: 1.0.0
+## SavedVariables: ProfessionalDB
+
+Core.lua
+Data\Init.lua
+Data\Recipes_Alchemy.lua
+Data\Recipes_Blacksmithing.lua
+Data\Recipes_Cooking.lua
+Data\Recipes_Enchanting.lua
+Data\Recipes_Engineering.lua
+Data\Recipes_FirstAid.lua
+Data\Recipes_Leatherworking.lua
+Data\Recipes_Mining.lua
+Data\Recipes_Poisons.lua
+Data\Recipes_Tailoring.lua
+Data\RecipeItems.lua
+Data\World.lua
+Data\Items.lua
+Data.lua
+Scanner.lua
+Widgets.lua
+UI.lua
+Tabs.lua
+Tooltip.lua
