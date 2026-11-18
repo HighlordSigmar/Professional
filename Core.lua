@@ -257,6 +257,7 @@ CM:On("PLAYER_ENTERING_WORLD", function()
   if not CM.db then CM:InitDB() end
   if not CM:InitChar() then return end
   CM.ready = true
+  CM:CleanLearned()
   CM:ApplyWindowReplacement()
   CM:ScanSkills()
   CM:ScanSpellbook()

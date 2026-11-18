@@ -8,6 +8,35 @@ local RECIPE_PREFIXES = { "Recipe: ", "Pattern: ", "Plans: ", "Schematic: ", "Fo
 CM.RECIPE_PREFIXES = RECIPE_PREFIXES
 
 ------------------------------------------------------------------------
+-- Profession ranks taught by trainers ("Journeyman Blacksmith", "Expert Cook") are not recipes
+------------------------------------------------------------------------
+local RANK_WORDS = { "Apprentice", "Journeyman", "Expert", "Artisan", "Master", "Grand Master" }
+function CM.IsRankName(name)
+  if not name then return false end
+  for i = 1, table.getn(RANK_WORDS) do
+    local w = RANK_WORDS[i]
+    if name == w then return true end
+    if string.sub(name, 1, string.len(w) + 1) == w .. " " then
+      -- "Journeyman Blacksmith", "Expert First Aid", but not "Master Engineer's Goggles"
+      local rest = string.sub(name, string.len(w) + 2)
+      local words = 0
+      for _ in string.gfind(rest, "%S+") do words = words + 1 end
+      if words <= 2 and not string.find(rest, "'", 1, true) then return true end
+    end
+  end
+  return false
+end
+
+-- Remove rank entries that older versions recorded at trainers as if they were recipes
+function CM:CleanLearned()
+  for prof, list in pairs(self.db.learned) do
+    for key, e in pairs(list) do
+      if CM.IsRankName(e.n) then list[key] = nil end
+    end
+  end
+end
+
+------------------------------------------------------------------------
 -- Built-in data indexes
 ------------------------------------------------------------------------
 function CM:Index()
@@ -590,7 +619,7 @@ function CM:ProfessionRecipes(prof)
   local l = self.db.learned[prof]
   if l then
     for key, v in pairs(l) do
-      if not seen[key] then seen[key] = true; table.insert(out, self:Recipe(prof, v.n)) end
+      if not seen[key] and not CM.IsRankName(v.n) then seen[key] = true; table.insert(out, self:Recipe(prof, v.n)) end
     end
   end
   local c = self.db.cache[prof]

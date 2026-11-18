@@ -341,7 +341,7 @@ function CM:ScanTrainer()
     local name, sub, kind = GetTrainerServiceInfo(i)
     if name and kind ~= "header" then
       local skill, level = GetTrainerServiceSkillReq(i)
-      local isRank = sub and (string.find(sub, "Apprentice") or string.find(sub, "Journeyman") or string.find(sub, "Expert") or string.find(sub, "Artisan") or string.find(sub, "Master"))
+      local isRank = CM.IsRankName(name) or (sub and (string.find(sub, "Apprentice") or string.find(sub, "Journeyman") or string.find(sub, "Expert") or string.find(sub, "Artisan") or string.find(sub, "Master")))
       if skill and skill ~= "" and not CM.GATHERING[skill] and name ~= skill and not isRank then
         local cost = GetTrainerServiceCost(i)
         local db = self:DBRecipe(skill, name)
